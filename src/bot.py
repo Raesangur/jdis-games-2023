@@ -13,8 +13,10 @@ class MyBot:
     between each call of the `tick` method.
     """
     def __init__(self):
-        self.__name = "name_of_my_super_cool_bot"
+        self.__name = "Bon_Matin_2.0"
         self.__first_turn = True
+
+        self.turnCount = 0
 
 
     def __random_action(self) -> Action:
@@ -37,7 +39,20 @@ class MyBot:
         """
         if self.__first_turn:
             self.__first_turn = False
-            return Action(Pattern([Direction.UP, Direction.RIGHT]))
-       
+            return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP]))
 
-        return self.__random_action()
+        player = state.players["Bon_Matin_2.0"]
+        print(player)
+        self.turnCount = player.alive
+        
+        if self.turnCount < 5:
+            return Action(Direction.LEFT)
+        elif self.turnCount == 5:
+            return Action(Direction.UP)
+        elif self.turnCount < 10 and self.turnCount > 5:
+            return Action(Direction.RIGHT)
+        elif self.turnCount == 10:
+            return Action(Direction.DOWN)
+
+        else:
+            return self.__random_action()

@@ -16,9 +16,10 @@ class MyBot:
         self.__name = "Bon_Matin_2.0"
         self.__first_turn = True
 
-        self.defaultMode = "Killing"
+        self.defaultMode = "Building"
+        self.defaultDirection = "up"
         self.mode = self.defaultMode
-        self.direction = "up"
+        self.direction = self.defaultDirection
 
         self.ticks = -1
 
@@ -267,8 +268,8 @@ class MyBot:
         if player.alive == 0:
             print("Restarting")
             self.mode = self.defaultMode
+            self.direction = self.defaultDirection
             self.ticks = 0
-            self.direction = 'up'
 
 
         # Checking mode

@@ -16,8 +16,7 @@ class MyBot:
         self.__name = "Bon_Matin_2.0"
         self.__first_turn = True
 
-        self.turnCount = 0
-        
+        self.mode = "Building"
 
     def __random_action(self) -> Action:
         return random.choice(list(Direction))
@@ -110,9 +109,17 @@ class MyBot:
 
             return None
 
-        #def check_if_enemy_in_region(player, players):
-        #    for p in players.values():
-        #        if p.name == "Bon_Matin_2.0":
+        def check_if_enemy_in_region(player, players):
+            for p in players.values():
+                if p.name == "Bon_Matin_2.0":
+                    continue
+
+                for t in p.trail:
+                    for r in player.region:
+                        if t[0] == r[0] and t[1] == r[1]:
+                            print("Instakilling " + p.name)
+                            return Action(Teleport(t[0], t[1]))
+            return None
             
 
         def will_it_suicide(player, action):
@@ -144,10 +151,29 @@ class MyBot:
         x = player.pos[0]
         y = player.pos[1]
 
+        # Avoiding death if in danger
         avoidance = check_if_about_to_be_killed(player, state.players)
         if avoidance is not None:
             return avoidance
 
-        targetPosition = get_closest_trail(state.players, player)
-        action = get_direction_from_delta(x - targetPosition[0], y - targetPosition[1])
+        # Killing an enemy trying to take our region
+        instaKill = check_if_enemy_in_region(player, state.players)
+        if instaKill is not None:
+            return instaKill
+
+        # Resetting if just died
+        if player.alive == 0:
+            print("Restarting")
+            self.mode = "Building"
+
+        # Checking mode
+        action = Action(Pattern([]))
+        if self.mode == "Building":
+            action = Action(Direction.LEFT)
+            if len(player.region) > 10:
+                self.mode = "Killing"
+        else:
+            targetPosition = get_closest_trail(state.players, player)
+            action = get_direction_from_delta(x - targetPosition[0], y - targetPosition[1])
+
         return will_it_suicide(player, action)

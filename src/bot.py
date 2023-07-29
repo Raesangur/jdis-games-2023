@@ -17,6 +17,7 @@ class MyBot:
         self.__first_turn = True
 
         self.mode = "Building"
+        self.direction = "up"
 
     def __random_action(self) -> Action:
         return random.choice(list(Direction))
@@ -117,8 +118,14 @@ class MyBot:
                 for t in p.trail:
                     for r in player.region:
                         if t[0] == r[0] and t[1] == r[1]:
-                            print("Instakilling " + p.name)
-                            return Action(Teleport(t[0], t[1]))
+                            if (t[0], t[1] + 1) in player.region:
+                                print("Instakilling " + p.name + " (going up)")
+                                self.mode = "InstaKill Up"
+                                return Action(Teleport(t[0], t[1] + 1))
+                            elif (t[0], t[1] - 1) in player.region:
+                                print("Instakilling " + p.name + " (going down)")
+                                self.mode = "InstaKill Down"
+                                return Action(Teleport(t[0], t[1] - 1))
             return None
             
 
@@ -148,6 +155,7 @@ class MyBot:
             self.__first_turn = False
             return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP, Direction.UP]))
         player = state.players["Bon_Matin_2.0"]
+
         x = player.pos[0]
         y = player.pos[1]
 
@@ -155,6 +163,16 @@ class MyBot:
         avoidance = check_if_about_to_be_killed(player, state.players)
         if avoidance is not None:
             return avoidance
+
+        # Mode after InstaKill
+        if self.mode == "InstaKill Up":
+            print("Killing Up")
+            self.mode = "Building"
+            return Action(Direction.UP)
+        elif self.mode == "InstaKill Down":
+            print("Killing Down")
+            self.mode = "Building"
+            return Action(Direction.Down)
 
         # Killing an enemy trying to take our region
         instaKill = check_if_enemy_in_region(player, state.players)
@@ -166,11 +184,39 @@ class MyBot:
             print("Restarting")
             self.mode = "Building"
 
+        # Changing to kill mode on map edge
+        
+
         # Checking mode
         action = Action(Pattern([]))
         if self.mode == "Building":
-            action = Action(Direction.LEFT)
-            if len(player.region) > 10:
+            self.direction = 'up'
+            totCount = 39
+    
+            if self.direction == 'up':
+                if player.alive % totCount < 7:
+                    return Action(Direction.UP)
+                elif player.alive % totCount < 17:
+                    return Action(Direction.RIGHT)
+                elif player.alive % totCount < 24:
+                    return Action(Direction.DOWN)
+                elif player.alive % totCount < 34:
+                    return Action(Direction.LEFT)
+                elif player.alive % totCount < 40:
+                    return Action(Direction.UP)
+                else:
+                    return Action(Direction.DOWN)
+    
+    
+            elif self.direction < 'right':
+                return Action(Direction.RIGHT)
+            elif self.direction >= 'left':
+                return Action(Direction.RIGHT)
+            else:
+                return Action(Direction.RIGHT)
+
+                
+            if len(player.region) > 100:
                 self.mode = "Killing"
         else:
             targetPosition = get_closest_trail(state.players, player)

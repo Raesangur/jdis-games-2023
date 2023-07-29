@@ -142,7 +142,7 @@ class MyBot:
             return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP, Direction.UP]))
         player = state.players["Bon_Matin_2.0"]
 
-        direction = 'up'
+        direction = 'down'
         totCount = 39
 
         if direction == 'up':
@@ -159,23 +159,45 @@ class MyBot:
             else:
                 return Action(Direction.DOWN)
 
+        elif direction == 'right':
+            if player.alive % totCount < 7:
+                return Action(Direction.RIGHT)
+            elif player.alive % totCount < 17:
+                return Action(Direction.DOWN)
+            elif player.alive % totCount < 24:
+                return Action(Direction.LEFT)
+            elif player.alive % totCount < 34:
+                return Action(Direction.UP)
+            elif player.alive % totCount < 40:
+                return Action(Direction.RIGHT)
+            else:
+                return Action(Direction.DOWN)
+
+        elif direction == 'left':
+            if player.alive % totCount < 7:
+                return Action(Direction.LEFT)
+            elif player.alive % totCount < 17:
+                return Action(Direction.DOWN)
+            elif player.alive % totCount < 24:
+                return Action(Direction.RIGHT)
+            elif player.alive % totCount < 34:
+                return Action(Direction.UP)
+            elif player.alive % totCount < 40:
+                return Action(Direction.LEFT)
+            else:
+                return Action(Direction.DOWN)
 
 
-
-        elif direction < 'right':
-            return Action(Direction.RIGHT)
-        elif direction >= 'left':
-            return Action(Direction.RIGHT)
         else:
-            return Action(Direction.RIGHT)
-
-        x = player.pos[0]
-        y = player.pos[1]
-
-        avoidance = check_if_about_to_be_killed(player, state.players)
-        if avoidance is not None:
-            return avoidance
-
-        targetPosition = get_closest_trail(state.players, player)
-        action = get_direction_from_delta(x - targetPosition[0], y - targetPosition[1])
-        return will_it_suicide(player, action)
+            if player.alive % totCount < 7:
+                return Action(Direction.DOWN)
+            elif player.alive % totCount < 17:
+                return Action(Direction.RIGHT)
+            elif player.alive % totCount < 24:
+                return Action(Direction.UP)
+            elif player.alive % totCount < 34:
+                return Action(Direction.LEFT)
+            elif player.alive % totCount < 40:
+                return Action(Direction.DOWN)
+            else:
+                return Action(Direction.DOWN)

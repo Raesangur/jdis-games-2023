@@ -16,8 +16,11 @@ class MyBot:
         self.__name = "Bon_Matin_2.0"
         self.__first_turn = True
 
-        self.mode = "Building"
+        self.defaultMode = "Killing"
+        self.mode = self.defaultMode
         self.direction = "up"
+
+        self.ticks = -1
 
     def __random_action(self) -> Action:
         return random.choice(list(Direction))
@@ -126,6 +129,14 @@ class MyBot:
                                 print("Instakilling " + p.name + " (going down)")
                                 self.mode = "InstaKill Down"
                                 return Action(Teleport(t[0], t[1] - 1))
+                            elif (t[0 - 1], t[1]) in player.region:
+                                print("Instakilling " + p.name + " (going right)")
+                                self.mode = "InstaKill Right"
+                                return Action(Teleport(t[0] - 1, t[1]))
+                            elif (t[0 + 1], t[1]) in player.region:
+                                print("Instakilling " + p.name + " (going left)")
+                                self.mode = "InstaKill Left"
+                                return Action(Teleport(t[0] + 1, t[1]))
             return None
             
 
@@ -146,106 +157,119 @@ class MyBot:
             if (nextX, nextY) in player.trail:
                 regionPoint = list(player.region)[0]
                 print("Avoiding suicide")
+                self.ticks = 0
                 return Action(Teleport(regionPoint[0], regionPoint[1]))
             else:
                 return action
 
         def make_square_region(player):
-            self.direction = 'right'
             totCount = 39
     
             if self.direction == 'up':
-                if player.alive % totCount < 7:
+                if self.ticks % totCount < 7:
                     return Action(Direction.UP)
-                elif player.alive % totCount < 17:
+                elif self.ticks % totCount < 17:
                     return Action(Direction.RIGHT)
-                elif player.alive % totCount < 24:
+                elif self.ticks % totCount < 24:
                     return Action(Direction.DOWN)
-                elif player.alive % totCount < 34:
+                elif self.ticks % totCount < 34:
                     return Action(Direction.LEFT)
-                elif player.alive % totCount < 40:
+                elif self.ticks % totCount < 40:
                     return Action(Direction.UP)
                 else:
                     return Action(Direction.DOWN)
     
             elif self.direction == 'right':
-                if player.alive % totCount < 7:
+                if self.ticks % totCount < 7:
                     return Action(Direction.RIGHT)
-                elif player.alive % totCount < 17:
+                elif self.ticks % totCount < 17:
                     return Action(Direction.DOWN)
-                elif player.alive % totCount < 24:
+                elif self.ticks % totCount < 24:
                     return Action(Direction.LEFT)
-                elif player.alive % totCount < 34:
+                elif self.ticks % totCount < 34:
                     return Action(Direction.UP)
-                elif player.alive % totCount < 40:
+                elif self.ticks % totCount < 40:
                     return Action(Direction.RIGHT)
                 else:
                     return Action(Direction.DOWN)
     
             elif self.direction == 'left':
-                if player.alive % totCount < 7:
+                if self.ticks % totCount < 7:
                     return Action(Direction.LEFT)
-                elif player.alive % totCount < 17:
+                elif self.ticks % totCount < 17:
                     return Action(Direction.DOWN)
-                elif player.alive % totCount < 24:
+                elif self.ticks % totCount < 24:
                     return Action(Direction.RIGHT)
-                elif player.alive % totCount < 34:
+                elif self.ticks % totCount < 34:
                     return Action(Direction.UP)
-                elif player.alive % totCount < 40:
+                elif self.ticks % totCount < 40:
                     return Action(Direction.LEFT)
                 else:
                     return Action(Direction.DOWN)
     
     
             else:
-                if player.alive % totCount < 7:
+                if self.ticks % totCount < 7:
                     return Action(Direction.DOWN)
-                elif player.alive % totCount < 17:
+                elif self.ticks % totCount < 17:
                     return Action(Direction.RIGHT)
-                elif player.alive % totCount < 24:
+                elif self.ticks % totCount < 24:
                     return Action(Direction.UP)
-                elif player.alive % totCount < 34:
+                elif self.ticks % totCount < 34:
                     return Action(Direction.LEFT)
-                elif player.alive % totCount < 40:
+                elif self.ticks % totCount < 40:
                     return Action(Direction.DOWN)
                 else:
                     return Action(Direction.DOWN)
         
         if self.__first_turn:
             self.__first_turn = False
-            return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP, Direction.UP]))
+            return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.UP, Direction.UP]))
         player = state.players["Bon_Matin_2.0"]
 
         x = player.pos[0]
         y = player.pos[1]
 
+        self.ticks += 1
+
         # Avoiding death if in danger
         avoidance = check_if_about_to_be_killed(player, state.players)
         if avoidance is not None:
+            self.ticks = 0
             return avoidance
 
         # Mode after InstaKill
         if self.mode == "InstaKill Up":
             print("Killing Up")
-            self.mode = "Building"
+            self.mode = self.defaultMode
             return Action(Direction.UP)
         elif self.mode == "InstaKill Down":
             print("Killing Down")
-            self.mode = "Building"
-            return Action(Direction.Down)
+            self.mode = self.defaultMode
+            return Action(Direction.DOWN)
+        elif self.mode == "InstaKill Right":
+            print("Killing Right")
+            self.mode = self.defaultMode
+            return Action(Direction.RIGHT)
+        elif self.mode == "InstaKill Left":
+            print("Killing Left")
+            self.mode = self.defaultMode
+            return Action(Direction.LEFT)
+            
 
         # Killing an enemy trying to take our region
         instaKill = check_if_enemy_in_region(player, state.players)
         if instaKill is not None:
+            self.ticks = 0
             return instaKill
 
         # Resetting if just died
         if player.alive == 0:
             print("Restarting")
-            self.mode = "Building"
+            self.mode = self.defaultMode
+            self.ticks = 0
+            self.direction = 'up'
 
-        # Changing to kill mode on map edge
-        
 
         # Checking mode
         action = Action(Pattern([]))

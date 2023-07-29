@@ -3,7 +3,7 @@ import websockets
 
 from core.game_state import GameState
 from core.action import Action
-from src.bot import MyBot
+from src.bot import BotMatin
 
 class Socket:
     def __init__(self, url: str, secret: str) -> None:
@@ -12,7 +12,7 @@ class Socket:
         self.__ws = None
         self.__queue = asyncio.Queue[GameState](maxsize=1)
 
-        self.__bot = MyBot()
+        self.__bot = BotMatin()
 
     async def __connect(self):
         extra_headers = { 'Authorization': self.__secret }

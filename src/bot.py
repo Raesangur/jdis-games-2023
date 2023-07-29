@@ -17,13 +17,13 @@ class MyBot:
         self.__first_turn = True
 
         self.turnCount = 0
-
+        
 
     def __random_action(self) -> Action:
         return random.choice(list(Direction))
 
 
-    def tick(self, state: GameState) -> Action:
+    def tick(self, state: GameState) -> Action:    
         """
         (fr)
         Cette méthode est appelée à chaque tick de jeu. Vous pouvez y définir le comportement de
@@ -37,22 +37,61 @@ class MyBot:
             state (GameState):  (fr) L'état du jeu.
                                 (en) The state of the game.
         """
+
+        def get_closest_trail_to_player(player):
+            x = player.pos[0]
+            y = player.pos[1]
+
+            for t in player.trail:
+                delta = abs(t[0] - x) + abs(t[1] - y)
+                if delta == 1:
+                    return t
+            return (x, y)
+
+        def get_closest(players, player):
+            currentPosX = player.pos[0]
+            currentPosY = player.pos[1]
+
+            closestP = None
+            closestSum = 10000
+            for p in players.values():
+                if p.name == "Bon_Matin_2.0":
+                    continue
+
+                deltaX = abs(p.pos[0] - currentPosX)
+                deltaY = abs(p.pos[1] - currentPosY)
+                if deltaX + deltaX < closestSum:
+                    closestSum = deltaX + deltaY
+                    closestP = p
+                
+            print(str(currentPosX) + " " + str(currentPosY))
+            print(closestP.name + " " + str(closestP.pos[0]) + " " + str(closestP.pos[1]) + " " + str(get_closest_trail_to_player(closestP)))
+
+            return get_direction_from_delta(currentPosX - closestP.pos[0], currentPosY - closestP.pos[1])
+
+        def get_direction_from_delta(deltaX, deltaY) -> Action:
+            if abs(deltaX) > abs(deltaY):
+                if deltaX > 0:
+                    return Action(Direction.LEFT)
+                else:
+                    return Action(Direction.RIGHT)
+            else:
+                if deltaY > 0:
+                    return Action(Direction.UP)
+                else:
+                    return Action(Direction.DOWN)
+                
+
+        
         if self.__first_turn:
             self.__first_turn = False
-            return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP]))
+            return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP, Direction.UP]))
 
         player = state.players["Bon_Matin_2.0"]
-        print(player)
-        self.turnCount = player.alive
-        
-        if self.turnCount < 5:
-            return Action(Direction.LEFT)
-        elif self.turnCount == 5:
-            return Action(Direction.UP)
-        elif self.turnCount < 10 and self.turnCount > 5:
-            return Action(Direction.RIGHT)
-        elif self.turnCount == 10:
-            return Action(Direction.DOWN)
+        #print(player)
 
-        else:
-            return self.__random_action()
+        return get_closest(state.players, player)
+        self.turnCount = player.alive
+
+        return Action([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP, Direction.UP][player.alive % 9])
+        return self.__random_action()

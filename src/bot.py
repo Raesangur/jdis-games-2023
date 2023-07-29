@@ -21,6 +21,14 @@ class BotMatin:
         self.mode = self.defaultMode
         self.direction = self.defaultDirection
 
+        self.ignoreList = [self.__name, "Talgarr", "C3P0"]
+
+
+        self.defaultBuildThreshold = 200
+        self.defaultKillThreshold = 100
+        self.buildThreshold = self.defaultBuildThreshold
+        self.killThreshold = self.defaultKillThreshold
+
         self.ticks = -1
 
     def __random_action(self) -> Action:
@@ -51,9 +59,9 @@ class BotMatin:
                     return 'up'
                 elif player.pos[1] == 0:
                     return 'right'
-                elif player.pos[0] == 1200:
+                elif player.pos[0] == 120:
                     return 'down'
-                elif player.pos[1] == 1200:
+                elif player.pos[1] == 120:
                     return 'left'
                 else:
                     return self.direction
@@ -136,7 +144,7 @@ class BotMatin:
             closestP = None
             closestSum = 10000
             for p in players.values():
-                if p.name == __name:
+                if p.name in self.ignoreList:
                     continue
 
                 deltaX = abs(p.pos[0] - currentPosX)
@@ -157,7 +165,7 @@ class BotMatin:
             closestTrail = None
             closestSum = 10000
             for p in players.values():
-                if p.name == __name:
+                if p.name in self.ignoreList:
                     continue
 
                 for t in p.trail:
@@ -182,15 +190,15 @@ class BotMatin:
                     return Action(Direction.DOWN)
 
         def teleport_home(player):
+            regionPoint = list(player.region)[0]
             return Action(Teleport(regionPoint[0], regionPoint[1]))
 
         def check_if_about_to_be_killed(player, players):
             for p in players.values():
-                if p.name == __name:
+                if p.name in self.ignoreList:
                     continue
                 for t in player.trail:
                     if abs(p.pos[0] - t[0]) + abs(p.pos[1] - t[1]) == 1:
-                        regionPoint = list(player.region)[0]
                         print("Avoiding death")
                         return teleport_home(player)
 
@@ -198,25 +206,25 @@ class BotMatin:
 
         def check_if_enemy_in_region(player, players):
             for p in players.values():
-                if p.name == __name:
+                if p.name in self.ignoreList:
                     continue
 
                 for t in p.trail:
                     for r in player.region:
                         if t[0] == r[0] and t[1] == r[1]:
-                            if (t[0], t[1] + 1) in player.region:
+                            if (t[0], t[1] + 1) in player.region and (t[0], t[1] + 1) not in t:
                                 print("Instakilling " + p.name + " (going up)")
                                 self.mode = "InstaKill Up"
                                 return Action(Teleport(t[0], t[1] + 1))
-                            elif (t[0], t[1] - 1) in player.region:
+                            elif (t[0], t[1] - 1) in player.region and (t[0], t[1] - 1) not in t:
                                 print("Instakilling " + p.name + " (going down)")
                                 self.mode = "InstaKill Down"
                                 return Action(Teleport(t[0], t[1] - 1))
-                            elif (t[0 - 1], t[1]) in player.region:
+                            elif (t[0 - 1], t[1]) in player.region and (t[0 - 1], t[1]) not in t:
                                 print("Instakilling " + p.name + " (going right)")
                                 self.mode = "InstaKill Right"
                                 return Action(Teleport(t[0] - 1, t[1]))
-                            elif (t[0 + 1], t[1]) in player.region:
+                            elif (t[0 + 1], t[1]) in player.region and (t[0 + 1], t[1]) not in t:
                                 print("Instakilling " + p.name + " (going left)")
                                 self.mode = "InstaKill Left"
                                 return Action(Teleport(t[0] + 1, t[1]))
@@ -266,7 +274,7 @@ class BotMatin:
             self.__first_turn = False
             return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.UP, Direction.UP]))
 
-        player = state.players[__name]
+        player = state.players[self.__name]
         x = player.pos[0]
         y = player.pos[1]
         self.ticks += 1
@@ -295,6 +303,8 @@ class BotMatin:
             print("Restarting")
             self.mode = self.defaultMode
             self.direction = self.defaultDirection
+            self.buildThreshold = self.defaultBuildThreshold
+            self.killThreshold = self.defaultKillThreshold
             self.ticks = -1
 
 
@@ -303,14 +313,15 @@ class BotMatin:
         if self.mode == "Building":
             action = make_square_region(player)
                 
-            if len(player.region) > 100:
+            if len(player.region) > self.buildThreshold:
                 print("Region big enough, switching to Kill Mode")
                 self.mode = "Killing"
         else:
             targetPosition, distance = get_closest_trail(state.players, player)
-            if distance > 50:
+            if distance > self.killThreshold:
                 action = teleport_home(player)
-                self.mode = defaultMode
+                self.mode = self.defaultMode
+                self.buildThreshold += self.defaultBuildThreshold
                 self.ticks = -1
             else:
                 action = get_direction_from_delta(x - targetPosition[0], y - targetPosition[1])

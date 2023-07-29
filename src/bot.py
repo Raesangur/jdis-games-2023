@@ -105,10 +105,30 @@ class MyBot:
             return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP, Direction.UP]))
 
         player = state.players["Bon_Matin_2.0"]
-        #print(player)
 
-        return get_closest_trail(state.players, player)
-        self.turnCount = player.alive
+        direction = 'up'
+        totCount = 39
 
-        return Action([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP, Direction.UP][player.alive % 9])
-        return self.__random_action()
+        if direction == 'up':
+            if player.alive % totCount < 7:
+                return Action(Direction.UP)
+            elif player.alive % totCount < 17:
+                return Action(Direction.RIGHT)
+            elif player.alive % totCount < 24:
+                return Action(Direction.DOWN)
+            elif player.alive % totCount < 34:
+                return Action(Direction.LEFT)
+            elif player.alive % totCount < 40:
+                return Action(Direction.UP)
+            else:
+                return Action(Direction.DOWN)
+
+
+
+
+        elif direction < 'right':
+            return Action(Direction.RIGHT)
+        elif direction >= 'left':
+            return Action(Direction.RIGHT)
+        else:
+            return Action(Direction.RIGHT)

@@ -48,7 +48,7 @@ class MyBot:
                     return t
             return (x, y)
 
-        def get_closest(players, player):
+        def get_closest_player(players, player):
             currentPosX = player.pos[0]
             currentPosY = player.pos[1]
 
@@ -68,6 +68,23 @@ class MyBot:
             print(closestP.name + " " + str(closestP.pos[0]) + " " + str(closestP.pos[1]) + " " + str(get_closest_trail_to_player(closestP)))
 
             return get_direction_from_delta(currentPosX - closestP.pos[0], currentPosY - closestP.pos[1])
+
+        def get_closest_trail(players, player):
+            x = player.pos[0]
+            y = player.pos[1]
+            closestTrail = None
+            closestSum = 10000
+            for p in players.values():
+                if p.name == "Bon_Matin_2.0":
+                    continue
+
+                for t in p.trail:
+                    dx = abs(t[0] - x)
+                    dy = abs(t[1] - y)
+                    if dx + dy < closestSum:
+                        closestTrail = t
+                        closestSum = dx + dy
+            return get_direction_from_delta(x - closestTrail[0], y - closestTrail[1])
 
         def get_direction_from_delta(deltaX, deltaY) -> Action:
             if abs(deltaX) > abs(deltaY):
@@ -90,7 +107,7 @@ class MyBot:
         player = state.players["Bon_Matin_2.0"]
         #print(player)
 
-        return get_closest(state.players, player)
+        return get_closest_trail(state.players, player)
         self.turnCount = player.alive
 
         return Action([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP, Direction.UP][player.alive % 9])

@@ -88,7 +88,7 @@ class MyBot:
                     if dx + dy < closestSum:
                         closestTrail = t
                         closestSum = dx + dy
-            return closestTrail
+            return closestTrail, closestSum
 
         def get_direction_from_delta(deltaX, deltaY) -> Action:
             if abs(deltaX) > abs(deltaY):
@@ -102,6 +102,9 @@ class MyBot:
                 else:
                     return Action(Direction.DOWN)
 
+        def teleport_home(player):
+            return Action(Teleport(regionPoint[0], regionPoint[1]))
+
         def check_if_about_to_be_killed(player, players):
             for p in players.values():
                 if p.name == "Bon_Matin_2.0":
@@ -110,7 +113,7 @@ class MyBot:
                     if abs(p.pos[0] - t[0]) + abs(p.pos[1] - t[1]) == 1:
                         regionPoint = list(player.region)[0]
                         print("Avoiding death")
-                        return Action(Teleport(regionPoint[0], regionPoint[1]))
+                        return teleport_home(player)
 
             return None
 
@@ -165,6 +168,21 @@ class MyBot:
 
         def make_square_region(player):
             totCount = 39
+
+            def find_direction():
+                # 1200x1200
+                if player.pos[0] == 0:
+                    return 'up'
+                elif player.pos[1] == 0:
+                    return 'right'
+                elif player.pos[0] == 1200:
+                    return 'down'
+                elif player.pos[1] == 1200:
+                    return 'left'
+                else:
+                    return self.direction
+
+            self.direction = find_direction()
     
             if self.direction == 'up':
                 if self.ticks % totCount < 7:
@@ -278,9 +296,12 @@ class MyBot:
             action = make_square_region(player)
                 
             if len(player.region) > 100:
+                print("Region big enough, switching to Kill Mode")
                 self.mode = "Killing"
         else:
-            targetPosition = get_closest_trail(state.players, player)
+            targetPosition, distance = get_closest_trail(state.players, player)
+            if distance > 50:
+                action = teleport_home(player)
             action = get_direction_from_delta(x - targetPosition[0], y - targetPosition[1])
 
         return will_it_suicide(player, action)

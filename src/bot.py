@@ -21,13 +21,15 @@ class BotMatin:
         self.mode = self.defaultMode
         self.direction = self.defaultDirection
 
-        self.ignoreList = [self.__name, "Talgarr", "C3P0"]
+        self.ignoreList = [self.__name] #, "Talgarr", "C3P0", "VK", "Jacques Cartier", "Stonks"]
 
 
-        self.defaultBuildThreshold = 200
-        self.defaultKillThreshold = 100
+        self.defaultBuildThreshold = 60
+        self.defaultKillThreshold = 50
+        self.defaultLowerKillThreshold = 5
         self.buildThreshold = self.defaultBuildThreshold
         self.killThreshold = self.defaultKillThreshold
+        self.lowerKillThreshold = self.defaultLowerKillThreshold
 
         self.ticks = -1
 
@@ -51,7 +53,7 @@ class BotMatin:
         """
 
         def make_square_region(player):
-            totCount = 39
+            totCount = 14
 
             def find_direction():
                 # 1200x1200
@@ -59,9 +61,9 @@ class BotMatin:
                     return 'up'
                 elif player.pos[1] == 0:
                     return 'right'
-                elif player.pos[0] == 120:
+                elif player.pos[0] == 119:
                     return 'down'
-                elif player.pos[1] == 120:
+                elif player.pos[1] == 119:
                     return 'left'
                 else:
                     return self.direction
@@ -69,61 +71,62 @@ class BotMatin:
             self.direction = find_direction()
     
             if self.direction == 'up':
-                if self.ticks % totCount < 7:
+                if self.ticks % totCount < 3:
                     return Action(Direction.UP)
-                elif self.ticks % totCount < 17:
+                elif self.ticks % totCount < 6:
                     return Action(Direction.RIGHT)
-                elif self.ticks % totCount < 24:
+                elif self.ticks % totCount < 9:
                     return Action(Direction.DOWN)
-                elif self.ticks % totCount < 34:
+                elif self.ticks % totCount < 12:
                     return Action(Direction.LEFT)
-                elif self.ticks % totCount < 40:
+                elif self.ticks % totCount < 15:
                     return Action(Direction.UP)
                 else:
                     return Action(Direction.DOWN)
     
             elif self.direction == 'right':
-                if self.ticks % totCount < 7:
+                if self.ticks % totCount < 3:
                     return Action(Direction.RIGHT)
-                elif self.ticks % totCount < 17:
+                elif self.ticks % totCount < 6:
                     return Action(Direction.DOWN)
-                elif self.ticks % totCount < 24:
+                elif self.ticks % totCount < 9:
                     return Action(Direction.LEFT)
-                elif self.ticks % totCount < 34:
+                elif self.ticks % totCount < 12:
                     return Action(Direction.UP)
-                elif self.ticks % totCount < 40:
+                elif self.ticks % totCount < 15:
                     return Action(Direction.RIGHT)
                 else:
                     return Action(Direction.DOWN)
     
             elif self.direction == 'left':
-                if self.ticks % totCount < 7:
+                if self.ticks % totCount < 3:
                     return Action(Direction.LEFT)
-                elif self.ticks % totCount < 17:
+                elif self.ticks % totCount < 6:
                     return Action(Direction.DOWN)
-                elif self.ticks % totCount < 24:
+                elif self.ticks % totCount < 9:
                     return Action(Direction.RIGHT)
-                elif self.ticks % totCount < 34:
+                elif self.ticks % totCount < 12:
                     return Action(Direction.UP)
-                elif self.ticks % totCount < 40:
+                elif self.ticks % totCount < 15:
                     return Action(Direction.LEFT)
                 else:
                     return Action(Direction.DOWN)
     
     
             else:
-                if self.ticks % totCount < 7:
+                if self.ticks % totCount < 3:
                     return Action(Direction.DOWN)
-                elif self.ticks % totCount < 17:
+                elif self.ticks % totCount < 6:
                     return Action(Direction.RIGHT)
-                elif self.ticks % totCount < 24:
+                elif self.ticks % totCount < 9:
                     return Action(Direction.UP)
-                elif self.ticks % totCount < 34:
+                elif self.ticks % totCount < 12:
                     return Action(Direction.LEFT)
-                elif self.ticks % totCount < 40:
+                elif self.ticks % totCount < 15:
                     return Action(Direction.DOWN)
                 else:
                     return Action(Direction.DOWN)
+            
 
 
         def get_closest_trail_to_player(player):
@@ -137,7 +140,7 @@ class BotMatin:
             return (x, y)
 
 
-        def get_closest_player(players, player):
+        def get_closest_player(player, players):
             currentPosX = player.pos[0]
             currentPosY = player.pos[1]
 
@@ -156,7 +159,7 @@ class BotMatin:
             print(str(currentPosX) + " " + str(currentPosY))
             print(closestP.name + " " + str(closestP.pos[0]) + " " + str(closestP.pos[1]) + " " + str(get_closest_trail_to_player(closestP)))
 
-            return get_direction_from_delta(currentPosX - closestP.pos[0], currentPosY - closestP.pos[1])
+            return currentPosX - closestP.pos[0], currentPosY - closestP.pos[1]
 
 
         def get_closest_trail(players, player):
@@ -198,7 +201,7 @@ class BotMatin:
                 if p.name in self.ignoreList:
                     continue
                 for t in player.trail:
-                    if abs(p.pos[0] - t[0]) + abs(p.pos[1] - t[1]) == 1:
+                    if abs(p.pos[0] - t[0]) + abs(p.pos[1] - t[1]) <= 2:
                         print("Avoiding death")
                         return teleport_home(player)
 
@@ -212,6 +215,7 @@ class BotMatin:
                 for t in p.trail:
                     for r in player.region:
                         if t[0] == r[0] and t[1] == r[1]:
+                            print("Instakill Target: " + t[0] + " " + t[1])
                             if (t[0], t[1] + 1) in player.region and (t[0], t[1] + 1) not in t:
                                 print("Instakilling " + p.name + " (going up)")
                                 self.mode = "InstaKill Up"
@@ -229,21 +233,23 @@ class BotMatin:
                                 self.mode = "InstaKill Left"
                                 return Action(Teleport(t[0] + 1, t[1]))
             return None
-            
 
-        def handle_instakill(player):
+
+        def handle_instakill(player, players):
             if self.mode == "InstaKill Up":
-                print("Killing Up")
+                print("Killing Up (" + x + " " + y + ")")
                 return Action(Direction.UP)
             elif self.mode == "InstaKill Down":
-                print("Killing Down")
+                print("Killing Down (" + x + " " + y + ")")
                 return Action(Direction.DOWN)
             elif self.mode == "InstaKill Right":
-                print("Killing Right")
+                print("Killing Right ("  + x + " " + y + ")")
                 return Action(Direction.RIGHT)
             elif self.mode == "InstaKill Left":
-                print("Killing Left")
+                print("Killing Left (" + x + " " + y + ")")
                 return Action(Direction.LEFT)
+            else:
+                return check_if_enemy_in_region(player, players)
 
 
         def will_it_suicide(player, action):
@@ -268,6 +274,28 @@ class BotMatin:
             else:
                 return action
 
+        def find_upper_left_corner(player):
+            x = 2000
+            y = 2000
+
+            # trouver tile la plus haute
+            for tile in player.region:
+                tile_y = tile[1]
+
+                if tile_y < y:
+                    y = tile_y
+
+            # trouver la tile en haut à gauche
+            for tile in player.region:
+                tile_x = tile[0]
+                tile_y = tile[1]
+
+                if tile_y == y:
+                    if tile_x < x:
+                        x = tile_x
+
+            return (x, y)
+
 
         ###########################################################################################
         if self.__first_turn:
@@ -285,18 +313,16 @@ class BotMatin:
             self.ticks = -1
             return avoidance
 
+        if self.mode != "Building" and self.mode != "Killing":
+            print(self.mode)
+
         # Mode after InstaKill
-        instaKill = handle_instakill(player)
-        if instaKill is not None:
-            self.ticks = -1
-            return instaKill
+        #instaKill = handle_instakill(player, state.players)
+        #if instaKill is not None:
+        #    self.ticks = -1
+        #    self.mode = self.defaultMode
+        #    return instaKill
             
-        # Killing an enemy trying to take our region
-        instaKill = check_if_enemy_in_region(player, state.players)
-        if instaKill is not None:
-            self.ticks = -1
-            self.mode = self.defaultMode
-            return instaKill
 
         # Resetting if just died
         if player.alive == 0:
@@ -312,6 +338,11 @@ class BotMatin:
         action = Action(Pattern([]))
         if self.mode == "Building":
             action = make_square_region(player)
+
+            _, distance = get_closest_trail(state.players, player)
+            if distance < self.lowerKillThreshold:
+                print("Enemy close enough, switching to Kill Mode")
+                self.mode = "Killing"
                 
             if len(player.region) > self.buildThreshold:
                 print("Region big enough, switching to Kill Mode")

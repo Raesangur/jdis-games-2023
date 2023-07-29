@@ -150,6 +150,66 @@ class MyBot:
             else:
                 return action
 
+        def make_square_region(player):
+            self.direction = 'right'
+            totCount = 39
+    
+            if self.direction == 'up':
+                if player.alive % totCount < 7:
+                    return Action(Direction.UP)
+                elif player.alive % totCount < 17:
+                    return Action(Direction.RIGHT)
+                elif player.alive % totCount < 24:
+                    return Action(Direction.DOWN)
+                elif player.alive % totCount < 34:
+                    return Action(Direction.LEFT)
+                elif player.alive % totCount < 40:
+                    return Action(Direction.UP)
+                else:
+                    return Action(Direction.DOWN)
+    
+            elif self.direction == 'right':
+                if player.alive % totCount < 7:
+                    return Action(Direction.RIGHT)
+                elif player.alive % totCount < 17:
+                    return Action(Direction.DOWN)
+                elif player.alive % totCount < 24:
+                    return Action(Direction.LEFT)
+                elif player.alive % totCount < 34:
+                    return Action(Direction.UP)
+                elif player.alive % totCount < 40:
+                    return Action(Direction.RIGHT)
+                else:
+                    return Action(Direction.DOWN)
+    
+            elif self.direction == 'left':
+                if player.alive % totCount < 7:
+                    return Action(Direction.LEFT)
+                elif player.alive % totCount < 17:
+                    return Action(Direction.DOWN)
+                elif player.alive % totCount < 24:
+                    return Action(Direction.RIGHT)
+                elif player.alive % totCount < 34:
+                    return Action(Direction.UP)
+                elif player.alive % totCount < 40:
+                    return Action(Direction.LEFT)
+                else:
+                    return Action(Direction.DOWN)
+    
+    
+            else:
+                if player.alive % totCount < 7:
+                    return Action(Direction.DOWN)
+                elif player.alive % totCount < 17:
+                    return Action(Direction.RIGHT)
+                elif player.alive % totCount < 24:
+                    return Action(Direction.UP)
+                elif player.alive % totCount < 34:
+                    return Action(Direction.LEFT)
+                elif player.alive % totCount < 40:
+                    return Action(Direction.DOWN)
+                else:
+                    return Action(Direction.DOWN)
         
         if self.__first_turn:
             self.__first_turn = False
@@ -190,31 +250,7 @@ class MyBot:
         # Checking mode
         action = Action(Pattern([]))
         if self.mode == "Building":
-            self.direction = 'up'
-            totCount = 39
-    
-            if self.direction == 'up':
-                if player.alive % totCount < 7:
-                    return Action(Direction.UP)
-                elif player.alive % totCount < 17:
-                    return Action(Direction.RIGHT)
-                elif player.alive % totCount < 24:
-                    return Action(Direction.DOWN)
-                elif player.alive % totCount < 34:
-                    return Action(Direction.LEFT)
-                elif player.alive % totCount < 40:
-                    return Action(Direction.UP)
-                else:
-                    return Action(Direction.DOWN)
-    
-    
-            elif self.direction < 'right':
-                return Action(Direction.RIGHT)
-            elif self.direction >= 'left':
-                return Action(Direction.RIGHT)
-            else:
-                return Action(Direction.RIGHT)
-
+            action = make_square_region(player)
                 
             if len(player.region) > 100:
                 self.mode = "Killing"
@@ -223,3 +259,4 @@ class MyBot:
             action = get_direction_from_delta(x - targetPosition[0], y - targetPosition[1])
 
         return will_it_suicide(player, action)
+        

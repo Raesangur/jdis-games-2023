@@ -84,7 +84,7 @@ class MyBot:
                     if dx + dy < closestSum:
                         closestTrail = t
                         closestSum = dx + dy
-            return get_direction_from_delta(x - closestTrail[0], y - closestTrail[1])
+            return closestTrail
 
         def get_direction_from_delta(deltaX, deltaY) -> Action:
             if abs(deltaX) > abs(deltaY):
@@ -97,13 +97,49 @@ class MyBot:
                     return Action(Direction.UP)
                 else:
                     return Action(Direction.DOWN)
-                
+
+        def check_if_about_to_be_killed(player, players):
+            for p in players.values():
+                if p.name == "Bon_Matin_2.0":
+                    continue
+                for t in player.trail:
+                    if abs(p.pos[0] - t[0]) + abs(p.pos[1] - t[1]) == 1:
+                        regionPoint = list(player.region)[0]
+                        print("Avoiding death")
+                        return Action(Teleport(regionPoint[0], regionPoint[1]))
+
+            return None
+
+        #def check_if_enemy_in_region(player, players):
+        #    for p in players.values():
+        #        if p.name == "Bon_Matin_2.0":
+            
+
+        def will_it_suicide(player, action):
+            if action == Action(Direction.UP):
+                nextX = player.pos[0]
+                nextY = player.pos[1] - 1
+            elif action == Action(Direction.DOWN):
+                nextX = player.pos[0]
+                nextY = player.pos[1] + 1
+            elif action == Action(Direction.LEFT):
+                nextX = player.pos[0] - 1
+                nextY = player.pos[1]
+            else:
+                nextX = player.pos[0] + 1
+                nextY = player.pos[1]
+
+            if (nextX, nextY) in player.trail:
+                regionPoint = list(player.region)[0]
+                print("Avoiding suicide")
+                return Action(Teleport(regionPoint[0], regionPoint[1]))
+            else:
+                return action
 
         
         if self.__first_turn:
             self.__first_turn = False
             return Action(Pattern([Direction.RIGHT, Direction.RIGHT, Direction.RIGHT, Direction.DOWN, Direction.DOWN, Direction.LEFT, Direction.LEFT, Direction.UP, Direction.UP]))
-
         player = state.players["Bon_Matin_2.0"]
 
         direction = 'up'
@@ -132,3 +168,14 @@ class MyBot:
             return Action(Direction.RIGHT)
         else:
             return Action(Direction.RIGHT)
+
+        x = player.pos[0]
+        y = player.pos[1]
+
+        avoidance = check_if_about_to_be_killed(player, state.players)
+        if avoidance is not None:
+            return avoidance
+
+        targetPosition = get_closest_trail(state.players, player)
+        action = get_direction_from_delta(x - targetPosition[0], y - targetPosition[1])
+        return will_it_suicide(player, action)

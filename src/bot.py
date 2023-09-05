@@ -61,9 +61,9 @@ class BotMatin:
                     return 'up'
                 elif player.pos[1] == 0:
                     return 'right'
-                elif player.pos[0] == 119:
+                elif player.pos[0] == 19:
                     return 'down'
-                elif player.pos[1] == 119:
+                elif player.pos[1] == 19:
                     return 'left'
                 else:
                     return self.direction
